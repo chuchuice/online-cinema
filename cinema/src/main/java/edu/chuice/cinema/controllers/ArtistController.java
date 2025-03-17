@@ -38,14 +38,6 @@ public class ArtistController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //TODO подумать, как можно реализовать поиск по строке для всего
-    @GetMapping("/search/{name}")
-    public ResponseEntity<List<Artist>> getArtistsByName(@PathVariable("name") String name) {
-        return ResponseEntity
-                .ok()
-                .body(this.artistService.findByName(name));
-    }
-
     @PostMapping()
     public ResponseEntity<?> addArtist(@Valid @RequestBody Artist artist, BindingResult result) {
         if (result.hasErrors()) {
