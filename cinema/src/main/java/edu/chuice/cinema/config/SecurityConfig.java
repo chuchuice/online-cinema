@@ -29,7 +29,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.GET, "/api/v1/artists").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/artists/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/v1/artists/search/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/artists").permitAll()
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/artists/**").permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/artists/**").permitAll()

@@ -4,32 +4,29 @@ import edu.chuice.cinema.models.Artist;
 import edu.chuice.cinema.repositories.ArtistRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
 public class ArtistService {
+
     private final ArtistRepository artistRepository;
+    private final CacheManager cacheManager;
 
     @Autowired
-    public ArtistService(ArtistRepository artistRepository) {
+    public ArtistService(ArtistRepository artistRepository, CacheManager cacheManager) {
         this.artistRepository = artistRepository;
-    }
-
-    public List<Artist> findByName(@NotNull final String name) {
-        return artistRepository.findByName(name);
-    }
-
-    public List<Artist> findByNameAndSurname(@NotNull final String name, @NotNull final String surname) {
-        return artistRepository.findByNameAndSurname(name, surname);
+        this.cacheManager = cacheManager;
     }
 
     @Cacheable(value = "artists")
@@ -37,9 +34,21 @@ public class ArtistService {
         return artistRepository.findAll();
     }
 
-    @Cacheable(value = "artist")
+    //TODO Поиск по кэшу не работает
+    @Cacheable(value = "artist", key = "#id")
     public Optional<Artist> findById(final long id) {
-        return artistRepository.findById(id);
+        Cache cache = cacheManager.getCache("artists");
+
+        if (cache == null) {
+            return artistRepository.findById(id);
+        }
+
+        Map<Long, Optional<Artist>> artists = cache.get("artists", Map.class);
+
+        Optional<Artist> artist = Optional.ofNullable(artists)
+                .flatMap(map -> map.get(id));
+
+        return artist.isPresent() ? artist : artistRepository.findById(id);
     }
 
     @Transactional(readOnly = false)
